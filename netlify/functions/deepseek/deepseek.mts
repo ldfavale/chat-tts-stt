@@ -1,45 +1,46 @@
-import { Context } from '@netlify/functions'
-import OpenAI from "openai";
-
+import { Handler } from '@netlify/functions';
+import OpenAI from 'openai';
 
 const openai = new OpenAI({
   baseURL: 'https://api.deepseek.com',
   apiKey: process.env.DEEPSEEK_API_KEY,
 });
 
-export default async (request: Request, context: Context) => {
-  const url = new URL(request.url)
-  const prompt = url.searchParams.get('prompt') 
-  console.log("prompt",prompt);
+export const handler: Handler = async (event, context) => {
+  const prompt = event.queryStringParameters?.prompt;
+  console.log('prompt', prompt);
   if (!prompt) {
-    return new Response('Prompt is required', {
-      status: 500,
-    }) 
+    return {
+      statusCode: 400,
+      body: 'Prompt is required',
+    };
   }
+
   try {
-  
     const completion = await openai.chat.completions.create({
       messages: [
-        { role: "system", content: "You are a helpful assistant." },
-        { role: "user", "content": prompt }
-    ],
-      model: "deepseek-chat",
+        { role: 'system', content: 'You are a helpful assistant.' },
+        { role: 'user', content: prompt },
+      ],
+      model: 'deepseek-chat',
     });
 
-    const textResponse = completion.choices[0].message.content
-    
+    const textResponse = completion.choices[0].message.content;
 
-    return new Response(textResponse, {
+    return {
+      statusCode: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*', // O especifica el origen permitido
+        'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Headers': 'Content-Type',
-        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE'
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE',
       },
-    });
+      body: JSON.stringify({ response: textResponse }),
+    };
   } catch (error) {
-    return new Response((error as Error).toString(), {
-      status: 500,
-    })
+    return {
+      statusCode: 500,
+      body: `Error: ${(error as Error).message}`,
+    };
   }
-}
+};
