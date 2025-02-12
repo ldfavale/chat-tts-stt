@@ -76,7 +76,7 @@ const Chat = () => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ prompt }),
+      body: prompt ,
     });
     const data = await res.json();
     return data;
@@ -88,7 +88,7 @@ const Chat = () => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ message }),
+      body: message ,
     });    
   };
 

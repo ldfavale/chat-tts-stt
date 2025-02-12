@@ -11,7 +11,7 @@ export const handler: Handler = async (event, context) => {
     if (!message) {
       return {
         statusCode: 400,
-        body: 'Text is required',
+        body:  JSON.stringify({ response: "text is required" }),
       };
     }
 
