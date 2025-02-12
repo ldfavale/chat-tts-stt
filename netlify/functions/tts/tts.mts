@@ -20,8 +20,7 @@ export default async (request: Request, context: Context) => {
       });
 
       
-      const webStream = Readable.toWeb(audioStream);
-      return new Response(webStream as unknown as BodyInit, {
+      return new Response(audioStream as unknown as BodyInit, {
         headers: {
           "content-type": "audio/mpeg", 
         },
