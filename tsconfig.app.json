@@ -7,5 +7,5 @@
     "module": "nodenext",
     "jsx": "react-jsx"
   },
-  "include": ["src"]
+  "include": ["src", "src/netlify/functions/tts.mts"]
 }
