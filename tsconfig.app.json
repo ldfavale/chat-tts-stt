@@ -5,11 +5,11 @@
     "target": "ES2020",
     "useDefineForClassFields": true,
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
-    "module": "node16",
+    "module": "nodenext",
     "skipLibCheck": true,
 
     /* Bundler mode */
-    "moduleResolution": "node16",
+    "moduleResolution": "nodenext",
     "isolatedModules": true,
     "moduleDetection": "force",
     "noEmit": true,
