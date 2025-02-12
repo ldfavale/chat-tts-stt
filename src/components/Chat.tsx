@@ -71,7 +71,7 @@ const Chat = () => {
   };
 
   const fetchChatGPT = async (prompt: string) => {
-    const res = await fetch("https://chat-tts-stt.netlify.app/.netlify/functions/api/deepseek", {
+    const res = await fetch("https://chat-tts-stt.netlify.app/.netlify/functions/deepseek", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -83,7 +83,7 @@ const Chat = () => {
   };
 
   const fetchTTS = async (message: string) => {
-    return await fetch("https://chat-tts-stt.netlify.app/.netlify/functions/api/tts", {
+    return await fetch("https://chat-tts-stt.netlify.app/.netlify/functions/tts", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
