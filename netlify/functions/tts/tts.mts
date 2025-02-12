@@ -4,8 +4,9 @@ import { ElevenLabsClient } from "elevenlabs";
 
 export default async (request: Request, context: Context) => {
   try {
-      const url = new URL(request.url)
-      const message = url.searchParams.get('message') 
+      const url = new URL(request.url);
+      const message = url.searchParams.get('message');
+      console.log("message",message)
       if (!message) {
         return new Response('Text is required', {
           status: 500,

@@ -10,6 +10,7 @@ const openai = new OpenAI({
 export default async (request: Request, context: Context) => {
   const url = new URL(request.url)
   const prompt = url.searchParams.get('prompt') 
+  console.log("prompt",prompt);
   if (!prompt) {
     return new Response('Prompt is required', {
       status: 500,
@@ -27,7 +28,15 @@ export default async (request: Request, context: Context) => {
 
     const textResponse = completion.choices[0].message.content
     
-    return new Response(textResponse)
+
+    return new Response(textResponse, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*', // O especifica el origen permitido
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE'
+      },
+    });
   } catch (error) {
     return new Response((error as Error).toString(), {
       status: 500,
