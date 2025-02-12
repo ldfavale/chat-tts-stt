@@ -24,7 +24,7 @@ export default async (request: Request, context: Context) => {
     ],
       model: "deepseek-chat",
     });
-    
+
     const textResponse = completion.choices[0].message.content
     
     return new Response(textResponse)

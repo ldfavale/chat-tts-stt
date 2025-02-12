@@ -1,6 +1,5 @@
 import { Context } from '@netlify/functions'
 import { ElevenLabsClient } from "elevenlabs";
-import { Readable } from 'stream';
 
 
 export default async (request: Request, context: Context) => {
@@ -23,8 +22,8 @@ export default async (request: Request, context: Context) => {
       return new Response(audioStream as unknown as BodyInit, {
         headers: {
           "content-type": "audio/mpeg", 
-        },
-      });
+             },
+        });
    
 
     } catch (error) {
