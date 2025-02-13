@@ -36,8 +36,11 @@ const Chat = () => {
     try {
         const chatResponse = await handleSendPrompt();
         const audioResponse = await fetchTTS(chatResponse)
+        console.log("audioResponse =>",audioResponse)
         const audioBlob = await audioResponse.blob();
+        console.log("audioBlob =>",audioBlob)
         const audioUrl = URL.createObjectURL(audioBlob);
+        console.log("audioUrl =>",audioUrl)
 
         if(audioRef && audioRef.current ){
           audioRef.current.src = audioUrl;

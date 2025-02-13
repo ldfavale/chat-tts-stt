@@ -1,14 +1,12 @@
 // tts.mts
 import { HandlerEvent } from '@netlify/functions';
 import { ElevenLabsClient } from 'elevenlabs';
+import { FRONTEND_URL } from '../../../constants.js'
 
 const client = new ElevenLabsClient();
 
-const DEV_BASE_URL = "http://localhost:8888";
-const PROD_BASE_URL = "https://chat-tts-stt.netlify.app/";
-
 const corsHeaders = {
-  "Access-Control-Allow-Origin": DEV_BASE_URL ,
+  "Access-Control-Allow-Origin": FRONTEND_URL ,
   "Access-Control-Allow-Headers": "Content-Type, Accept, Origin",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
 };

@@ -1,5 +1,6 @@
 import { HandlerEvent, stream } from "@netlify/functions";
 import OpenAI from "openai";
+import { FRONTEND_URL } from '../../../constants.js'
 
 const openai = new OpenAI({
   baseURL: "https://api.deepseek.com",
@@ -7,7 +8,7 @@ const openai = new OpenAI({
 });
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "http://localhost:8888",
+  "Access-Control-Allow-Origin": FRONTEND_URL,
   "Access-Control-Allow-Headers": "Content-Type, Accept, Origin",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
 };
