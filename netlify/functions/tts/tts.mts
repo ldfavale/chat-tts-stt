@@ -23,32 +23,38 @@ export const handler = async (event: HandlerEvent) => {
   try {
     console.log("event",event)
     const { message } = JSON.parse(event.body || "");
-    console.log("message",message)
-
-    if (!message) {
+    
+    if (!message || typeof message !== "string") {
       return {
         statusCode: 400,
-        body:  JSON.stringify({ response: "text is required" }),
+        headers: corsHeaders,
+        body: JSON.stringify({ error: "Invalid message format" }),
       };
     }
-
-    const audioStream = await client.textToSpeech.convertAsStream('JBFqnCBsd6RMkjVDRZzb', {
+    // const audioStream = await client.textToSpeech.convertAsStream('JBFqnCBsd6RMkjVDRZzb', {
+    //   text: removeEmojis(message),
+    //   model_id: 'eleven_multilingual_v2',
+    // });
+    // console.log("audioStream",audioStream)
+    
+    const audioBuffer = await client.textToSpeech.convert("JBFqnCBsd6RMkjVDRZzb", {
       text: removeEmojis(message),
-      model_id: 'eleven_multilingual_v2',
+      model_id: "eleven_multilingual_v2",
+      output_format: "mp3_44100_128",
     });
-
-    const headers = {
-      ...corsHeaders,
-      'Content-Type': 'audio/mpeg'
-    };
+    
 
     return {
       statusCode: 200,
-      headers,
-      body: audioStream
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'audio/mpeg',
+      },
+      body: audioBuffer,
+      isBase64Encoded: true,
     };
   } catch (error) {
-    console.error(error)
+    console.log("ERROR:",error)
     return {
       statusCode: 500,
       body: `Error: ${(error as Error).message}`,

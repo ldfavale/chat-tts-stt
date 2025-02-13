@@ -11,6 +11,7 @@ const Chat = () => {
   const [inputText, setInputText] = useState(""); 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [currentAudioUrl, setCurrentAudioUrl] = useState<string | null>(null);
 
   const audioRef = useRef<HTMLAudioElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
@@ -34,24 +35,34 @@ const Chat = () => {
     setInputText("");
 
     try {
-        const chatResponse = await handleSendPrompt();
-        const audioResponse = await fetchTTS(chatResponse)
-        console.log("audioResponse =>",audioResponse)
-        const audioBlob = await audioResponse.blob();
-        console.log("audioBlob =>",audioBlob)
-        const audioUrl = URL.createObjectURL(audioBlob);
-        console.log("audioUrl =>",audioUrl)
+      const chatResponse = await handleSendPrompt();
+      const audioBlob = await fetchTTS(chatResponse);
+      console.log("audioBlob =>",audioBlob)
 
-        if(audioRef && audioRef.current ){
-          audioRef.current.src = audioUrl;
-          audioRef.current.play();
-          setIsPlaying(true)
-        }
+      if (currentAudioUrl) URL.revokeObjectURL(currentAudioUrl);
+      const newAudioUrl = URL.createObjectURL(audioBlob);
+      setCurrentAudioUrl(newAudioUrl);
+      
+      console.log("audioUrl =>",newAudioUrl)
 
-        setMessages((prevMessages) => [
-            ...prevMessages, 
-            { text: chatResponse, role: "system" },
-        ]);
+      if (audioRef?.current) {
+        audioRef.current.src = newAudioUrl;
+        // audioRef.current.type = "audio/mpeg"; // Especificar formato
+        await audioRef.current.play();
+        setIsPlaying(true);
+        
+        // Limpieza automática
+        audioRef.current.onended = () => {
+          setIsPlaying(false);
+          URL.revokeObjectURL(newAudioUrl);
+          setCurrentAudioUrl(null);
+        };
+      }
+
+      setMessages((prevMessages) => [
+          ...prevMessages, 
+          { text: chatResponse, role: "system" },
+      ]);
 
     } catch (error) {
         console.error("Error:", error);
@@ -86,17 +97,34 @@ const Chat = () => {
     return data;
   };
 
+  // const fetchTTS = async (message: string) => {
+  //   console.log("message",message)
+  //   console.log("JSON.stringify({ message })",JSON.stringify({ message }))
+  //   return await fetch(ELEVENLABS_TTS_URL, {
+  //     method: "POST",
+  //     mode: 'cors',
+  //     headers: {
+  //       "Content-Type": "application/json",
+  //     },
+  //     body: JSON.stringify({ message }),
+  //   });    
+  // };
+
   const fetchTTS = async (message: string) => {
-    console.log("message",message)
-    console.log("JSON.stringify({ message })",JSON.stringify({ message }))
-    return await fetch(ELEVENLABS_TTS_URL, {
-      method: "POST",
-      mode: 'cors',
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ message }),
-    });    
+    try {
+      const response = await fetch(ELEVENLABS_TTS_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message }),
+      });
+
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      
+      return await response.blob();
+    } catch (error) {
+      console.error("Error en TTS:", error);
+      throw error;
+    }
   };
 
   const handlePlayPause = () => {
