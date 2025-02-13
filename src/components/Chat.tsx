@@ -87,6 +87,8 @@ const Chat = () => {
   };
 
   const fetchTTS = async (message: string) => {
+    console.log("message",message)
+    console.log("JSON.stringify({ message })",JSON.stringify({ message }))
     return await fetch(ELEVENLABS_TTS_URL, {
       method: "POST",
       mode: 'cors',

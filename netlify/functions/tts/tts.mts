@@ -21,7 +21,9 @@ export const handler = async (event: HandlerEvent) => {
     };
   }
   try {
+    console.log("event",event)
     const { message } = JSON.parse(event.body || "");
+    console.log("message",message)
 
     if (!message) {
       return {
@@ -43,9 +45,10 @@ export const handler = async (event: HandlerEvent) => {
     return {
       statusCode: 200,
       headers,
-      body: audioStream , 
+      body: audioStream
     };
   } catch (error) {
+    console.error(error)
     return {
       statusCode: 500,
       body: `Error: ${(error as Error).message}`,
