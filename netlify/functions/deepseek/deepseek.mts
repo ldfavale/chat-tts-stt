@@ -1,36 +1,61 @@
-import { Context } from '@netlify/functions'
+import { HandlerEvent, stream } from "@netlify/functions";
 import OpenAI from "openai";
 
-
 const openai = new OpenAI({
-  baseURL: 'https://api.deepseek.com',
+  baseURL: "https://api.deepseek.com",
   apiKey: process.env.DEEPSEEK_API_KEY,
 });
 
-export default async (request: Request, context: Context) => {
-  const url = new URL(request.url)
-  const prompt = url.searchParams.get('prompt') 
-  if (!prompt) {
-    return new Response('Prompt is required', {
-      status: 500,
-    }) 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "http://localhost:8888",
+  "Access-Control-Allow-Headers": "Content-Type, Accept, Origin",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+};
+
+export const handler = async (event: HandlerEvent) => {
+  // Manejar solicitud OPTIONS
+  if (event.httpMethod === "OPTIONS") {
+    return {
+      statusCode: 200,
+      headers: corsHeaders,
+      body: "",
+    };
   }
+
+  // Validar parámetro
+  const { prompt } = JSON.parse(event.body || "");
+  if (!prompt) {
+    return {
+      statusCode: 400,
+      headers: corsHeaders,
+      body: JSON.stringify({ error: "Prompt is required" }),
+    };
+  }
+
   try {
-  
+    // Generar respuesta
     const completion = await openai.chat.completions.create({
       messages: [
         { role: "system", content: "You are a helpful assistant." },
-        { role: "user", "content": prompt }
-    ],
+        { role: "user", content: prompt },
+      ],
       model: "deepseek-chat",
     });
 
-    const textResponse = completion.choices[0].message.content
+    return {
+      statusCode: 200,
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(completion.choices[0].message.content),
+    };
     
-    return new Response(textResponse)
   } catch (error) {
-    return new Response((error as Error).toString(), {
-      status: 500,
-    })
+    return {
+      statusCode: 500,
+      headers: corsHeaders,
+      body: JSON.stringify({ error: "Internal Server Error" }),
+    };
   }
-}
+};
