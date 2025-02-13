@@ -11,7 +11,6 @@ const Chat = () => {
   const [inputText, setInputText] = useState(""); 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [currentAudioUrl, setCurrentAudioUrl] = useState<string | null>(null);
 
   const audioRef = useRef<HTMLAudioElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
