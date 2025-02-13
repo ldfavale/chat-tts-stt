@@ -1,6 +1,6 @@
 import { PauseIcon, PlayIcon } from "@heroicons/react/20/solid";
 import { useState, useRef, useEffect } from "react";
-
+import { DEEPSEEK_URL, ELEVENLABS_TTS_URL} from '../../constants.js'
 interface Message {
     text: string;
     role: "user" | "system";
@@ -71,8 +71,9 @@ const Chat = () => {
   };
 
   const fetchChatGPT = async (prompt: string) => {
-    const res = await fetch("https://chat-tts-stt.netlify.app/.netlify/functions/api/deepseek", {
+    const res = await fetch(DEEPSEEK_URL, {
       method: "POST",
+      mode: 'cors',
       headers: {
         "Content-Type": "application/json",
       },
@@ -83,8 +84,9 @@ const Chat = () => {
   };
 
   const fetchTTS = async (message: string) => {
-    return await fetch("https://chat-tts-stt.netlify.app/.netlify/functions/api/tts", {
+    return await fetch(ELEVENLABS_TTS_URL, {
       method: "POST",
+      mode: 'cors',
       headers: {
         "Content-Type": "application/json",
       },
@@ -106,13 +108,13 @@ const Chat = () => {
   
 
   return (
-    <div className=" flex flex-col h-screen p-4 box-border bg-slate-800 "
+    <div className=" flex flex-col h-screen p-4 box-border  w-full max-w-[1024px] "
     >
       {/* Área de chat */}
       <div
         ref={chatContainerRef}
        
-        className="  flex flex-col-reverse overflow-y-auto mb-4 flex-1 "
+        className="  flex flex-col-reverse overflow-y-auto mb-4 flex-1  "
       >
         {messages
           .slice() // Crear una copia del array para no modificar el original
@@ -122,7 +124,7 @@ const Chat = () => {
               key={index}
               style={{
                 alignSelf: message?.role === "user" ? "flex-end" : "flex-start",
-                backgroundColor: message?.role === "user" ? "#007baa" : "#f1f1f1",
+                backgroundColor: message?.role === "user" ? "#2578B0" : "#90A1B9",
                 color: message?.role === "user" ? "#fff" : "#000",
                 padding: "8px 12px",
                 borderRadius: "8px",
@@ -153,38 +155,18 @@ const Chat = () => {
 
       {/* Entrada de texto */}
       <div
-        style={{
-          display: "flex",
-          gap: "8px",
-        }}
+        className="bg-slate-500 p-6 rounded-2xl gap-2 flex "
       >
         <input
           type="text"
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
-          onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-          style={{
-            flex: 1,
-            padding: "8px",
-            borderRadius: "8px",
-            
-          }}
-          className="bg-slate-500 text-white placeholder:text-white"
+          onKeyUp={(e) => e.key === "Enter" && handleSendMessage()}
+         
+          className=" text-white placeholder:text-white p-2 flex-1 border-none  focus-visible:outline-0"
           placeholder="Escribe un mensaje..."
         />
-        <button
-          onClick={handleSendMessage}
-          style={{
-            padding: "8px 16px",
-            borderRadius: "8px",
-            border: "none",
-            backgroundColor: "#007baa",
-            color: "#fff",
-            cursor: "pointer",
-          }}
-        >
-          Enviar
-        </button>
+        
         <audio id="audioPlayer" ref={audioRef} ></audio>
        <button onClick={() => handlePlayPause()} className="p-4  bg-slate-400 rounded-full" >
        { isPlaying ? 
