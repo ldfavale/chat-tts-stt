@@ -12,54 +12,40 @@ const corsHeaders = {
 };
 
 export const handler = async (event: HandlerEvent) => {
-  // Manejar solicitud OPTIONS
   if (event.httpMethod === "OPTIONS") {
-    return {
-      statusCode: 200,
-      headers: corsHeaders,
-      body: "",
-    };
+    return { statusCode: 200, headers: corsHeaders, body: "" };
   }
+
   try {
-    console.log("event",event)
     const { message } = JSON.parse(event.body || "");
     
-    if (!message || typeof message !== "string") {
-      return {
-        statusCode: 400,
-        headers: corsHeaders,
-        body: JSON.stringify({ error: "Invalid message format" }),
-      };
-    }
-    // const audioStream = await client.textToSpeech.convertAsStream('JBFqnCBsd6RMkjVDRZzb', {
-    //   text: removeEmojis(message),
-    //   model_id: 'eleven_multilingual_v2',
-    // });
-    // console.log("audioStream",audioStream)
-    
-    const audioBuffer = await client.textToSpeech.convert("JBFqnCBsd6RMkjVDRZzb", {
+    // Generar stream de audio usando la API de ElevenLabs
+    const audioStream = await client.textToSpeech.convertAsStream("JBFqnCBsd6RMkjVDRZzb", {
       text: removeEmojis(message),
       model_id: "eleven_multilingual_v2",
       output_format: "mp3_44100_128",
     });
-    
 
     return {
       statusCode: 200,
       headers: {
         ...corsHeaders,
         'Content-Type': 'audio/mpeg',
+        'Transfer-Encoding': 'chunked', // Necesario para streaming
       },
-      body: audioBuffer,
-      isBase64Encoded: true,
+      body: audioStream, // Enviar el stream directamente
+      isBase64Encoded: false, // Desactivar codificación base64
     };
+
   } catch (error) {
-    console.log("ERROR:",error)
+    console.error("ERROR:", error);
     return {
       statusCode: 500,
-      body: `Error: ${(error as Error).message}`,
+      headers: corsHeaders,
+      body: JSON.stringify({ error: "Error interno" }),
     };
   }
+
 };
 
 function removeEmojis(text: string): string {

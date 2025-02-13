@@ -35,29 +35,34 @@ const Chat = () => {
     setInputText("");
 
     try {
-      const chatResponse = await handleSendPrompt();
-      const audioBlob = await fetchTTS(chatResponse);
-      console.log("audioBlob =>",audioBlob)
+        const chatResponse = await handleSendPrompt();
+        const audioUrl = await fetchTTS(chatResponse);
+    
+        if (audioRef?.current) {
+          audioRef.current.src = audioUrl;
+          audioRef.current.play();
+          setIsPlaying(true);
+        }
 
-      if (currentAudioUrl) URL.revokeObjectURL(currentAudioUrl);
-      const newAudioUrl = URL.createObjectURL(audioBlob);
-      setCurrentAudioUrl(newAudioUrl);
+      // if (currentAudioUrl) URL.revokeObjectURL(currentAudioUrl);
+      // const newAudioUrl = URL.createObjectURL(audioBlob);
+      // setCurrentAudioUrl(newAudioUrl);
       
-      console.log("audioUrl =>",newAudioUrl)
+      // console.log("audioUrl =>",newAudioUrl)
 
-      if (audioRef?.current) {
-        audioRef.current.src = newAudioUrl;
-        // audioRef.current.type = "audio/mpeg"; // Especificar formato
-        await audioRef.current.play();
-        setIsPlaying(true);
+      // if (audioRef?.current) {
+      //   audioRef.current.src = newAudioUrl;
+      //   //audioRef.current.type = "audio/mpeg"; // Especificar formato
+      //   await audioRef.current.play();
+      //   setIsPlaying(true);
         
-        // Limpieza automática
-        audioRef.current.onended = () => {
-          setIsPlaying(false);
-          URL.revokeObjectURL(newAudioUrl);
-          setCurrentAudioUrl(null);
-        };
-      }
+      //   // Limpieza automática
+      //   audioRef.current.onended = () => {
+      //     setIsPlaying(false);
+      //     URL.revokeObjectURL(newAudioUrl);
+      //     setCurrentAudioUrl(null);
+      //   };
+      // }
 
       setMessages((prevMessages) => [
           ...prevMessages, 
@@ -109,22 +114,44 @@ const Chat = () => {
   //     body: JSON.stringify({ message }),
   //   });    
   // };
-
   const fetchTTS = async (message: string) => {
-    try {
-      const response = await fetch(ELEVENLABS_TTS_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message }),
-      });
-
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    const response = await fetch(ELEVENLABS_TTS_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message }),
+    });
+  
+    if (!response.ok) throw new Error("Error en TTS");
+    
+    // Crear MediaSource para streaming
+    const mediaSource = new MediaSource();
+    const audioUrl = URL.createObjectURL(mediaSource);
+  
+    mediaSource.addEventListener('sourceopen', async () => {
+      const sourceBuffer = mediaSource.addSourceBuffer('audio/mpeg');
       
-      return await response.blob();
-    } catch (error) {
-      console.error("Error en TTS:", error);
-      throw error;
-    }
+      const reader = response.body?.getReader();
+      
+      const pushChunk = async () => {
+        const { done, value } = await reader!.read();
+        if (done) {
+          mediaSource.endOfStream();
+          return;
+        }
+        
+        if (!sourceBuffer.updating) {
+          sourceBuffer.appendBuffer(value);
+          await new Promise(resolve => 
+            sourceBuffer.addEventListener('updateend', resolve, { once: true })
+          );
+          pushChunk();
+        }
+      };
+      
+      pushChunk();
+    });
+  
+    return audioUrl;
   };
 
   const handlePlayPause = () => {
