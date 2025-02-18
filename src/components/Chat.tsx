@@ -11,6 +11,7 @@ const Chat = () => {
   const [inputText, setInputText] = useState(""); 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [currentAudioUrl, setCurrentAudioUrl] = useState<string | null>(null);
 
   const audioRef = useRef<HTMLAudioElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
@@ -35,34 +36,26 @@ const Chat = () => {
 
     try {
         const chatResponse = await handleSendPrompt();
-        const audioUrl = await fetchTTS(chatResponse);
+        const audioBlob = await fetchTTS(chatResponse);
     
         if (audioRef?.current) {
-          audioRef.current.src = audioUrl;
-          audioRef.current.play();
+          if (currentAudioUrl) URL.revokeObjectURL(currentAudioUrl);
+          const newAudioUrl = URL.createObjectURL(audioBlob);
+
+          setCurrentAudioUrl(newAudioUrl);
+          audioRef.current.src = newAudioUrl;
+          await audioRef.current.play();
           setIsPlaying(true);
+          
+          console.log("audioUrl =>",newAudioUrl)
+
+          audioRef.current.onended = () => {
+            setIsPlaying(false);
+            URL.revokeObjectURL(newAudioUrl);
+            setCurrentAudioUrl(null);
+          };
         }
-
-      // if (currentAudioUrl) URL.revokeObjectURL(currentAudioUrl);
-      // const newAudioUrl = URL.createObjectURL(audioBlob);
-      // setCurrentAudioUrl(newAudioUrl);
-      
-      // console.log("audioUrl =>",newAudioUrl)
-
-      // if (audioRef?.current) {
-      //   audioRef.current.src = newAudioUrl;
-      //   //audioRef.current.type = "audio/mpeg"; // Especificar formato
-      //   await audioRef.current.play();
-      //   setIsPlaying(true);
         
-      //   // Limpieza automática
-      //   audioRef.current.onended = () => {
-      //     setIsPlaying(false);
-      //     URL.revokeObjectURL(newAudioUrl);
-      //     setCurrentAudioUrl(null);
-      //   };
-      // }
-
       setMessages((prevMessages) => [
           ...prevMessages, 
           { text: chatResponse, role: "system" },
@@ -101,18 +94,7 @@ const Chat = () => {
     return data;
   };
 
-  // const fetchTTS = async (message: string) => {
-  //   console.log("message",message)
-  //   console.log("JSON.stringify({ message })",JSON.stringify({ message }))
-  //   return await fetch(ELEVENLABS_TTS_URL, {
-  //     method: "POST",
-  //     mode: 'cors',
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //     },
-  //     body: JSON.stringify({ message }),
-  //   });    
-  // };
+
   const fetchTTS = async (message: string) => {
     const response = await fetch(ELEVENLABS_TTS_URL, {
       method: "POST",
@@ -122,35 +104,10 @@ const Chat = () => {
   
     if (!response.ok) throw new Error("Error en TTS");
     
-    // Crear MediaSource para streaming
-    const mediaSource = new MediaSource();
-    const audioUrl = URL.createObjectURL(mediaSource);
-  
-    mediaSource.addEventListener('sourceopen', async () => {
-      const sourceBuffer = mediaSource.addSourceBuffer('audio/mpeg');
-      
-      const reader = response.body?.getReader();
-      
-      const pushChunk = async () => {
-        const { done, value } = await reader!.read();
-        if (done) {
-          mediaSource.endOfStream();
-          return;
-        }
-        
-        if (!sourceBuffer.updating) {
-          sourceBuffer.appendBuffer(value);
-          await new Promise(resolve => 
-            sourceBuffer.addEventListener('updateend', resolve, { once: true })
-          );
-          pushChunk();
-        }
-      };
-      
-      pushChunk();
-    });
-  
-    return audioUrl;
+    const arrayBuffer = await response.arrayBuffer();
+    const uint8Array = new Uint8Array(arrayBuffer);
+    
+    return new Blob([uint8Array], { type: "audio/mpeg" });
   };
 
   const handlePlayPause = () => {

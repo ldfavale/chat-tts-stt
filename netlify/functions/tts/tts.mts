@@ -26,15 +26,23 @@ export const handler = async (event: HandlerEvent) => {
       output_format: "mp3_44100_128",
     });
 
+
+    // 2. Convertir stream a Buffer
+    const chunks: Uint8Array[] = [];
+    for await (const chunk of audioStream) {
+      chunks.push(chunk);
+    }
+    const audioBuffer = Buffer.concat(chunks);
+
     return {
       statusCode: 200,
       headers: {
         ...corsHeaders,
         'Content-Type': 'audio/mpeg',
-        'Transfer-Encoding': 'chunked', // Necesario para streaming
+        'Content-Length': audioBuffer.length.toString(),
       },
-      body: audioStream, // Enviar el stream directamente
-      isBase64Encoded: false, // Desactivar codificación base64
+      body: audioBuffer.toString("base64"),
+      isBase64Encoded: true, // ¡Clave para Lambda!
     };
 
   } catch (error) {
