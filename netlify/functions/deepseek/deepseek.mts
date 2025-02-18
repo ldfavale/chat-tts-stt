@@ -24,8 +24,8 @@ export const handler = async (event: HandlerEvent) => {
   }
 
   // Validar parámetro
-  const { prompt } = JSON.parse(event.body || "");
-  if (!prompt) {
+  const { messages } = JSON.parse(event.body || "");
+  if (!messages) {
     return {
       statusCode: 400,
       headers: corsHeaders,
@@ -36,11 +36,8 @@ export const handler = async (event: HandlerEvent) => {
   try {
     // Generar respuesta
     const completion = await openai.chat.completions.create({
-      messages: [
-        { role: "system", content: "You are a helpful assistant." },
-        { role: "user", content: prompt },
-      ],
-      model: "deepseek-chat",
+        messages,
+        model: "deepseek-chat",
     });
 
     return {
@@ -53,10 +50,11 @@ export const handler = async (event: HandlerEvent) => {
     };
     
   } catch (error) {
+    console.error(error)
     return {
       statusCode: 500,
       headers: corsHeaders,
-      body: JSON.stringify({ error: "Internal Server Error" }),
+      body: JSON.stringify({ error: "Internal Server Error", err: error }),
     };
   }
 };

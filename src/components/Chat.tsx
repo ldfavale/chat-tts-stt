@@ -2,12 +2,17 @@ import { PauseIcon, PlayIcon } from "@heroicons/react/20/solid";
 import { useState, useRef, useEffect } from "react";
 import { DEEPSEEK_URL, ELEVENLABS_TTS_URL} from '../../constants.js'
 interface Message {
-    text: string;
-    role: "user" | "system";
+    content: string;
+    role: "user" | "system" | "assistant";
+    visible?: boolean;
   }
 
 const Chat = () => {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>([{
+    role: "system",
+    content: "You are a helpful assistant. Respond in Spanish.",
+    visible: false
+  }]);
   const [inputText, setInputText] = useState(""); 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -26,16 +31,19 @@ const Chat = () => {
   const handleSendMessage = async () => {
     if (!inputText.trim()) return; 
 
-    setMessages((prevMessages) => [
-      ...prevMessages,
-      { text: inputText, role: "user" },
-    ]);
+    const newUserMessage: Message = {
+      content: inputText,
+      role: "user"  
+    };
+
+    const updatedMessages = [...messages, newUserMessage];
+    setMessages(updatedMessages);
 
     setIsLoading(true);
     setInputText("");
 
     try {
-        const chatResponse = await handleSendPrompt();
+        const chatResponse = await handleSendPrompt(updatedMessages);
         const audioBlob = await fetchTTS(chatResponse);
     
         if (audioRef?.current) {
@@ -56,39 +64,46 @@ const Chat = () => {
           };
         }
         
-      setMessages((prevMessages) => [
+        const newSystemMessage: Message = {
+          content: chatResponse,
+          role: "assistant"  
+        };
+
+        setMessages((prevMessages) => [
           ...prevMessages, 
-          { text: chatResponse, role: "system" },
+          newSystemMessage
       ]);
 
     } catch (error) {
         console.error("Error:", error);
         setMessages((prevMessages) => [
             ...prevMessages,
-            { text: "Error al obtener la respuesta", role: "system" },
+            { content: "Error al obtener la respuesta", role: "system" },
           ]);
     }finally{
         setIsLoading(false);
     }
   };
 
-  const handleSendPrompt = async () => {
+  const handleSendPrompt = async (updatedMessages:Message[]) => {
     try {
-      const chatResponse = await fetchChatGPT(inputText);
+      console.log("handleSendPrompt")
+      const chatResponse = await fetchChatGPT(updatedMessages);
+      console.log("chatResponse",chatResponse)
       return chatResponse;
     } catch (error) {
       console.error("Error fetching response:", error);
     }
   };
 
-  const fetchChatGPT = async (prompt: string) => {
+  const fetchChatGPT = async (messages: Message[]) => {
     const res = await fetch(DEEPSEEK_URL, {
       method: "POST",
       mode: 'cors',
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ prompt }),
+      body: JSON.stringify({ messages }),
     });
     const data = await res.json();
     return data;
@@ -134,6 +149,7 @@ const Chat = () => {
       >
         {messages
           .slice() // Crear una copia del array para no modificar el original
+          .filter(message => message.visible !== false)
           .reverse() // Invertir el orden para mostrar los mensajes más recientes abajo
           .map((message, index) => (
             <div
@@ -149,7 +165,7 @@ const Chat = () => {
               }}
               className="text-white"
             >
-              {message?.text}
+              {message?.content}
             </div>
           ))}
       </div>
