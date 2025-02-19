@@ -1,4 +1,4 @@
-import { PauseIcon, PlayIcon } from "@heroicons/react/20/solid";
+import { PauseIcon, PlayIcon,PaperAirplaneIcon } from "@heroicons/react/20/solid";
 import { useState, useRef, useEffect } from "react";
 import { DEEPSEEK_URL, ELEVENLABS_TTS_URL} from '../../constants.js'
 interface Message {
@@ -187,25 +187,34 @@ const Chat = () => {
 
       {/* Entrada de texto */}
       <div
-        className="bg-slate-500 p-6 rounded-2xl gap-2 flex "
+        className="bg-slate-500 p-6 rounded-2xl gap-2 flex-col space-y-8"
       >
-        <input
-          type="text"
-          value={inputText}
-          onChange={(e) => setInputText(e.target.value)}
-          onKeyUp={(e) => e.key === "Enter" && handleSendMessage()}
-         
-          className=" text-white placeholder:text-white p-2 flex-1 border-none  focus-visible:outline-0"
-          placeholder="Escribe un mensaje..."
-        />
-        
-        <audio id="audioPlayer" ref={audioRef} ></audio>
-       <button onClick={() => handlePlayPause()} className="p-4  bg-slate-400 rounded-full" >
-       { isPlaying ? 
-            <PauseIcon className="h-6 w-6 text-white" /> :
-            <PlayIcon className="h-6 w-6 text-white" />
-      }
-       </button>
+            <div className="flex flex">
+                <input
+                  type="text"
+                  value={inputText}
+                  onChange={(e) => setInputText(e.target.value)}
+                  onKeyUp={(e) => e.key === "Enter" && handleSendMessage()}
+                  
+                  className=" text-white placeholder:text-white p-2 flex-1 border-none  focus-visible:outline-0"
+                  placeholder="Escribe un mensaje..."
+                  />
+                <button 
+                onClick={()=> handleSendMessage()}
+                className=" bg-blue-500 text-white rounded-full p-4 hover:bg-blue-600">
+              <PaperAirplaneIcon className="w-6 h-6 transform rotate-335" />
+            </button>
+          </div>
+        <div className="flex  justify-end">
+
+          <audio id="audioPlayer" ref={audioRef} ></audio>
+        <button onClick={() => handlePlayPause()} className="p-2  bg-slate-400 rounded-full" >
+        { isPlaying ? 
+              <PauseIcon className="h-4 w-4 text-white" /> :
+              <PlayIcon className="h-4 w-4 text-white" />
+            }
+        </button>
+            </div>
       </div>
     </div>
   );
