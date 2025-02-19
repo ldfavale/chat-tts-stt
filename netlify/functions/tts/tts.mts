@@ -20,7 +20,7 @@ export const handler = async (event: HandlerEvent) => {
     const { message } = JSON.parse(event.body || "");
     
     // Generar stream de audio usando la API de ElevenLabs
-    const audioStream = await client.textToSpeech.convertAsStream("JBFqnCBsd6RMkjVDRZzb", {
+    const audioStream = await client.textToSpeech.convertAsStream("jBpfuIE2acCO8z3wKNLl", {
       text: removeEmojis(message),
       model_id: "eleven_multilingual_v2",
       output_format: "mp3_44100_128",
